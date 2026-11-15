@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0b0c0e">
+  <title>Gymbars</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0c0e; color: #f2f0eb; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #0b0c0e; }
+    .msg { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 28px; text-align: center; }
+    h1 { margin: 0; font-size: 28px; text-transform: uppercase; }
+    p { margin: 0; color: #a9adb5; line-height: 1.5; }
+    a { color: #f2f0eb; }
+    #fallback { position: fixed; right: 10px; bottom: 10px; z-index: 2; font-size: 13px; background: #14161a; padding: 8px 12px; border: 1px solid rgba(242,240,235,.2); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="msg" id="msg" hidden>
+    <h1>Enlace no válido</h1>
+    <p id="msg-detail">Este enlace está incompleto o ya no es válido. Pide uno nuevo al gimnasio.</p>
+  </div>
+  <iframe id="app" title="Gymbars" hidden referrerpolicy="no-referrer"></iframe>
+  <a id="fallback" href="#" hidden>Abrir en pantalla completa ↗</a>
+  <noscript><div class="msg"><h1>Gymbars</h1><p>Activa JavaScript para ver esta página.</p></div></noscript>
+
+  <script src="../config.js"></script>
+  <script src="../link-core.js"></script>
+  <script>
+    (function () {
+      var config = window.GYMBARS_CONFIG || {};
+      var target = window.GymbarsLinks.buildTarget(location.search, config.apiUrl, { allowLocal: !!config.allowLocal });
+      if (!target) {
+        document.getElementById('msg').hidden = false;
+        if (!config.apiUrl) document.getElementById('msg-detail').textContent = 'Falta configurar la dirección del sistema (config.js).';
+        return;
+      }
+      // La página de Apps Script se muestra aquí dentro: la barra de direcciones conserva tu dominio.
+      var frame = document.getElementById('app');
+      var loaded = false;
+      frame.addEventListener('load', function () { loaded = true; document.getElementById('fallback').hidden = true; });
+      frame.src = target;
+      frame.hidden = false;
+      // Si tarda mucho en cargar, se ofrece abrirla directamente.
+      var fallback = document.getElementById('fallback');
+      fallback.href = target;
+      setTimeout(function () { if (!loaded) fallback.hidden = false; }, 12000);
+    })();
+  </script>
+</body>
+</html>

@@ -148,6 +148,11 @@
           else $('pair-error').textContent = (res && res.networkError) ? 'Sin conexión. Intenta de nuevo.' : ((res && res.error) || 'No se pudo conectar.');
         });
       });
+      // El guion se pone solo: ABCD-EFGH (acepta pegar con o sin guion, en minúsculas o con espacios).
+      $('pair-code').addEventListener('input', function () {
+        var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+        this.value = raw.length > 4 ? raw.slice(0, 4) + '-' + raw.slice(4) : raw;
+      });
       $('pair-code').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('pair-btn').click(); });
       $('unpair-btn').addEventListener('click', function () {
         if (window.confirm('¿Desconectar este tablet? Para usarlo de nuevo necesitarás un código nuevo.')) { client.clear(); boot(); }
