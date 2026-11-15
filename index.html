@@ -234,10 +234,22 @@
         canvas.width = w; canvas.height = h;
         var ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(video, 0, 0, w, h);
-        var found = window.jsQR && window.jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' });
-        if (!found) return;
+        if (!window.jsQR) {                                   // la librería de lectura no cargó (sin internet o bloqueada)
+          if (!state.noReaderSince) state.noReaderSince = ts || Date.now();
+          if ((ts || Date.now()) - state.noReaderSince < 4000) return;
+          state.busy = true;
+          showResult({ tone: 'bad', title: 'NO SE PUEDE LEER QR', detail: 'No cargó el lector. Revisa la conexión y recarga la página.' });
+          return;
+        }
+        var found = window.jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
+        if (!found || !found.data) return;
         var code = core.parseQr(found.data);
-        if (!code) return;
+        if (!code) {                                          // hay un QR, pero no es un carnet: se avisa en vez de ignorarlo
+          if (!deduper.shouldSend('x:' + found.data)) return;
+          state.busy = true;
+          showResult({ tone: 'bad', title: 'ESE QR NO ES DE GYMBARS', detail: 'Usa el QR de tu carnet (el que te enviaron por WhatsApp).' });
+          return;
+        }
         if (!deduper.shouldSend(code)) return;
         state.busy = true;
         client.scan(code).then(function (res) {
