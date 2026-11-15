@@ -2,7 +2,7 @@
  * scanner-core.js — Lógica del escáner de asistencia (sin DOM, probada con Node).
  *
  * Se usa en el navegador como `GymbarsScanner` y en las pruebas con require().
- *   - parseQr:          valida el contenido del QR ("GB1:" + 24 hex)
+ *   - parseQr:          valida el contenido del QR (enlace del carnet o "GB1:" + 24 hex)
  *   - describeResult:   convierte la respuesta del servidor en lo que se muestra en pantalla
  *   - createDeduper:    evita enviar el mismo QR varias veces seguidas
  *   - createClient:     habla con el Web App de Apps Script (emparejar y escanear)
@@ -14,12 +14,15 @@
   'use strict';
 
   var QR_PATTERN = /^GB1:[0-9a-fA-F]{24}$/;
+  var LINK_PATTERN = /^(?:https:\/\/[^\s?#]+|http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?[^\s?#]*)\?carnet=([0-9a-fA-F]{24})$/;
   var STORAGE_KEY = 'gymbars.device';
 
   /** Devuelve el texto del QR si tiene el formato del carnet; si no, ''. */
   function parseQr(text) {
     var value = String(text == null ? '' : text).trim();
-    return QR_PATTERN.test(value) ? value : '';
+    if (QR_PATTERN.test(value)) return value;
+    var link = value.match(LINK_PATTERN);                 // enlace personal del carnet: ...?carnet=<24 hex>
+    return link ? 'GB1:' + link[1] : '';
   }
 
   /**
